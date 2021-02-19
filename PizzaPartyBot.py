@@ -6,44 +6,60 @@ from selenium import webdriver
 import sys
 import time
 
+aiDelay = 0.75
 adDelay = 2.0
 confidence = 0.9
 customerDelay = 2.5
 ingredientRegex = re.compile(r'Assets/Ingredients/(.*).png')
+maxLevel = 6
 orderRegex = re.compile(r'Assets/Pizzas/(.*)_pizza.png')
 potentialOrders = ['Assets/Pizzas/margherita_pizza.png', 'Assets/Pizzas/marinara_pizza.png', 
                     'Assets/Pizzas/ham_artichoke_pizza.png', 'Assets/Pizzas/ham_mushroom_pizza.png',
-                    'Assets/Pizzas/pepperoni_pizza.png']
+                    'Assets/Pizzas/pepperoni_pizza.png', 'Assets/Pizzas/pepperoni_mushroom_pizza.png']
 
 class PizzaPartyBot():
+    browser = None
     currentLevel = 1
     ingredientLocations = {}
     isNextLevel = False
 
-# Startup
+# Startup & Destruction
     def openBrowserAndStartGame(self):
         print('\nInitializing bot...\n')
-        browser = webdriver.Firefox()
-        browser.get('https://www.minigames.com/games/pizza-party')
+        self.browser = webdriver.Firefox()
+        self.browser.get('https://www.minigames.com/games/pizza-party')
         pyautogui.click(600, 200)
         pyautogui.scroll(-22)
 
         self.go()
         self.start()
         self.description()
-        self.clickContinue()
+        self.continueToFirstLevel()
+
+    def selfDestruct(self):
+        print('\nI have won, mortal...\n')
+        time.sleep(aiDelay)
+        print('\nSelf destruct in 5...')
+        for i in range(4, 0, -1):
+            time.sleep(aiDelay)
+            print('\n%s...' % i)
+        time.sleep(aiDelay * 2)
+        print('\nGoodnight...\n')
+        time.sleep(aiDelay * 2)
+        self.browser.close()
+        sys.exit(1)
+
+# Navigation
+    def go(self):
+        self.clickButton('Assets/Buttons/go_button.png', needed=True)
 
     def start(self):
         self.clickButton('Assets/Buttons/start_button.png', needed=True)
 
-    def go(self):
-        self.clickButton('Assets/Buttons/go_button.png', needed=True)
-
     def description(self):
         self.clickButton('Assets/Buttons/description_button.png', needed=True)
 
-# Navigation
-    def clickContinue(self):
+    def continueToFirstLevel(self):
         self.isNextLevel = True
         self.clickButton('Assets/Buttons/continue_button.png', needed=True)
 
@@ -51,7 +67,10 @@ class PizzaPartyBot():
         self.currentLevel += 1
         self.isNextLevel = True
 
-        self.clickButton('Assets/Buttons/next_level_button.png', needed=True)
+        if self.currentLevel != maxLevel:
+            self.clickButton('Assets/Buttons/next_level_button.png', needed=True)
+        else:
+            self.selfDestruct()
 
         print('\nStarting level %s...\n' % self.currentLevel)
         time.sleep(customerDelay) # Wait for first customer of upcoming level
@@ -84,6 +103,7 @@ class PizzaPartyBot():
         print('Finished the %s pizza...\n' % order)
         time.sleep(customerDelay) # Wait for next customer
 
+# Ingredient management
     def getIngredientsForOrder(self, order) -> list:
         if self.isNextLevel:
             self.getIngredientLocations()
@@ -116,6 +136,12 @@ class PizzaPartyBot():
             ingredients.append(self.ingredientLocations['mozzarella'])
             ingredients.append(self.ingredientLocations['basil'])
             ingredients.append(self.ingredientLocations['pepperoni'])
+            ingredients.append(self.ingredientLocations['oven'])
+        elif order == 'pepperoni_mushroom':
+            ingredients.append(self.ingredientLocations['tomato'])
+            ingredients.append(self.ingredientLocations['mozzarella'])
+            ingredients.append(self.ingredientLocations['pepperoni'])
+            ingredients.append(self.ingredientLocations['mushrooms'])
             ingredients.append(self.ingredientLocations['oven'])
 
         return ingredients
