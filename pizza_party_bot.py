@@ -6,16 +6,21 @@ from selenium import webdriver
 import sys
 import time
 
-confidence = 0.85
-orderRegex = re.compile(r'Images/(.*)_pizza.png')
-potentialOrders = ['Images/margherita_pizza.png', 'Images/marinara_pizza.png']
+adDelay = 2.0
+confidence = 0.9
+customerDelay = 2.5
+ingredientRegex = re.compile(r'Assets/Ingredients/(.*).png')
+orderRegex = re.compile(r'Assets/Pizzas/(.*)_pizza.png')
+potentialOrders = ['Assets/Pizzas/margherita_pizza.png', 'Assets/Pizzas/marinara_pizza.png', 
+                    'Assets/Pizzas/ham_artichoke_pizza.png', 'Assets/Pizzas/ham_mushroom_pizza.png',
+                    'Assets/Pizzas/pepperoni_pizza.png']
 
 class PizzaPartyBot():
-    ingredientLocations = None
+    currentLevel = 1
+    ingredientLocations = {}
     isNextLevel = False
 
 # Startup
-
     def openBrowserAndStartGame(self):
         print('\nInitializing bot...\n')
         browser = webdriver.Firefox()
@@ -24,40 +29,49 @@ class PizzaPartyBot():
         pyautogui.scroll(-22)
 
         self.go()
-        time.sleep(1)
         self.start()
         self.description()
-        self.continueToNextLevel()
+        self.clickContinue()
 
     def start(self):
-        self.clickButton('Images/start_button.png', needed=True)
+        self.clickButton('Assets/Buttons/start_button.png', needed=True)
 
     def go(self):
-        self.clickButton('Images/go_button.png', needed=True)
+        self.clickButton('Assets/Buttons/go_button.png', needed=True)
 
     def description(self):
-        self.clickButton('Images/description.png', needed=True)
+        self.clickButton('Assets/Buttons/description_button.png', needed=True)
 
 # Navigation
+    def clickContinue(self):
+        self.isNextLevel = True
+        self.clickButton('Assets/Buttons/continue_button.png', needed=True)
 
     def continueToNextLevel(self):
+        self.currentLevel += 1
         self.isNextLevel = True
-        self.clickButton('Images/continue_button.png', needed=True)
+
+        self.clickButton('Assets/Buttons/next_level_button.png', needed=True)
+
+        print('\nStarting level %s...\n' % self.currentLevel)
+        time.sleep(customerDelay) # Wait for first customer of upcoming level
 
 # Order creation
-
     def getNewOrder(self) -> str:
         print('Getting new order...')
 
+        # TODO: Improve bottleneck
         for orderName in potentialOrders:
             order = pyautogui.locateCenterOnScreen(orderName, confidence=confidence)
+
             if order == None:
                 continue
             else:
                 purgedOrderName = orderRegex.findall(orderName)
-                if purgedOrderName != []:
+                if purgedOrderName[0] != None:
                     return purgedOrderName[0]
 
+        print('\nNo new order...\n')
         return None
 
     def prepareNewOrder(self, order):
@@ -65,14 +79,15 @@ class PizzaPartyBot():
         ingredients = self.getIngredientsForOrder(order)
 
         for ingredient in ingredients:
-            pyautogui.click(ingredient.x / 2, ingredient.y / 2)
+            pyautogui.click(ingredient.x / 2, ingredient.y / 2) # Macs use points and have to be divided by 2
 
-        print('The %s pizza is finished...\n' % order)
-        time.sleep(2.5)
+        print('Finished the %s pizza...\n' % order)
+        time.sleep(customerDelay) # Wait for next customer
 
     def getIngredientsForOrder(self, order) -> list:
-        if self.ingredientLocations == None or self.isNextLevel:
+        if self.isNextLevel:
             self.getIngredientLocations()
+            self.isNextLevel = False
 
         ingredients = []
 
@@ -85,28 +100,61 @@ class PizzaPartyBot():
             ingredients.append(self.ingredientLocations['tomato'])
             ingredients.append(self.ingredientLocations['oregano'])
             ingredients.append(self.ingredientLocations['oven'])
+        elif order == 'ham_artichoke':
+            ingredients.append(self.ingredientLocations['tomato'])
+            ingredients.append(self.ingredientLocations['mozzarella'])
+            ingredients.append(self.ingredientLocations['ham'])
+            ingredients.append(self.ingredientLocations['artichoke'])
+            ingredients.append(self.ingredientLocations['oven'])
+        elif order == 'ham_mushroom':
+            ingredients.append(self.ingredientLocations['mozzarella'])
+            ingredients.append(self.ingredientLocations['ham'])
+            ingredients.append(self.ingredientLocations['mushrooms'])
+            ingredients.append(self.ingredientLocations['oven'])
+        elif order == 'pepperoni':
+            ingredients.append(self.ingredientLocations['tomato'])
+            ingredients.append(self.ingredientLocations['mozzarella'])
+            ingredients.append(self.ingredientLocations['basil'])
+            ingredients.append(self.ingredientLocations['pepperoni'])
+            ingredients.append(self.ingredientLocations['oven'])
 
         return ingredients
 
     def getIngredientLocations(self):
-        locations = {}
+        print('Updating ingredient location coordinates...')
+        locations = self.ingredientLocations
 
-        locations['tomato'] = self.getIngredientLocation('Images/tomato.png')
-        locations['mozzarella'] = self.getIngredientLocation('Images/mozzarella.png')
-        locations['basil'] = self.getIngredientLocation('Images/basil.png')
-        locations['oregano'] = self.getIngredientLocation('Images/oregano.png')
-        locations['oven'] = self.getIngredientLocation('Images/oven_button.png')
+        if self.currentLevel == 1:
+            locations['oven'] = self.getIngredientLocation('Assets/Ingredients/oven_button.png')
+            locations['tomato'] = self.getIngredientLocation('Assets/Ingredients/tomato.png')
+            locations['mozzarella'] = self.getIngredientLocation('Assets/Ingredients/mozzarella.png')
+            locations['basil'] = self.getIngredientLocation('Assets/Ingredients/basil.png')
+            locations['oregano'] = self.getIngredientLocation('Assets/Ingredients/oregano.png')
 
-        self.isNextLevel = False
+        if self.currentLevel == 2:
+            locations['ham'] = self.getIngredientLocation('Assets/Ingredients/ham.png')
+            locations['artichoke'] = self.getIngredientLocation('Assets/Ingredients/artichoke.png')
+
+        if self.currentLevel == 3:
+            locations['mushrooms'] = self.getIngredientLocation('Assets/Ingredients/mushrooms.png')
+
+        if self.currentLevel == 4:
+            locations['pepperoni'] = self.getIngredientLocation('Assets/Ingredients/pepperoni.png')
+
         self.ingredientLocations = locations
 
     def getIngredientLocation(self, ingredient) -> Point:
+        purgedIngredientName = ingredientRegex.findall(ingredient)
+
+        if purgedIngredientName[0] != None:
+            print('Added coordinates for %s to dictionary...' % purgedIngredientName[0])
+
         location = pyautogui.locateCenterOnScreen(ingredient, confidence=confidence)
+
         if location != None:
             return location
 
 # Utility methods
-
     def clickButton(self, button, needed=False, checkInterval=1):
         if needed:
             self.waitForButtonToClick(button, checkInterval)
@@ -119,17 +167,20 @@ class PizzaPartyBot():
         if button == None:
             return
         else:
+            # Macs use points and have to be divided by 2
             pyautogui.moveTo(button.x / 2, button.y / 2, duration=0.25)
-            pyautogui.click(button.x / 2, button.y / 2)
+            pyautogui.click(button.x / 2, button.y / 2) 
 
     def waitForButtonToClick(self, buttonName, checkInterval):
         waiting = True
 
         while waiting:
             button = pyautogui.locateCenterOnScreen(buttonName, confidence=confidence)
+
             if button == None:
                 time.sleep(checkInterval)
             else:
+                # Macs use points and have to be divided by 2
                 pyautogui.moveTo(button.x / 2, button.y / 2, duration=0.25)
                 pyautogui.click(button.x / 2, button.y / 2)
                 waiting = False
@@ -138,15 +189,13 @@ def main():
     app = PizzaPartyBot()
     app.openBrowserAndStartGame()
 
-    time.sleep(2) # Wait for first customer
+    time.sleep(customerDelay) # Wait for first customer of first level
 
     while True:
         order = app.getNewOrder()
 
         if order == None:
-            print('\nNo next order, reached next level\n')
-            # app.continueToNextLevel()
-            sys.exit(1)
+            app.continueToNextLevel()
         else:
             app.prepareNewOrder(order)
 
