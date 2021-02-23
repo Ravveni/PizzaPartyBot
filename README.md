@@ -16,7 +16,7 @@ Powered primarily through `pyautogui` for image recognition and GUI control.
 - Firefox web browser
 - Python 3.7/3.8 (Could work with other versions 3.4-3.9, but is untested)
 - Mac Retina display (Points v. pixel calculation difference, can probably remove the `/ 2` after move calculations for other screens, but that is untested at the moment)
-- [Follow setup docs](https://github.com/Ravveni/PizzaPartyBot/Setup.md)
+- [Follow setup docs](https://github.com/Ravveni/PizzaPartyBot/blob/main/Setup.md)
 
 ### TODO
 - [x] Add additional level compatibility
