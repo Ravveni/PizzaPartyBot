@@ -24,4 +24,4 @@ Powered primarily through `pyautogui` for image recognition and GUI control.
 - [x] Requirements.txt for pip installation of dependencies
 - [ ] Alleviate bottleneck on `PizzaPartyBot.py ln. 83`
 - [ ] Historical database for amount of each pizza per level
-- [ ] Finish setup documentation for Mac and Raspberian (for Raspeberry 4)
+- [ ] Finish setup documentation for Mac

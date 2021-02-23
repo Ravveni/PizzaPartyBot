@@ -28,7 +28,7 @@ class PizzaPartyBot():
         print('\nInitializing bot...\n')
         self.browser = webdriver.Firefox()
         self.browser.get('https://www.minigames.com/games/pizza-party')
-        pyautogui.click(600, 200)
+        # pyautogui.click(600, 200)
         pyautogui.scroll(-22)
 
         self.go()
