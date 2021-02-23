@@ -1,8 +1,9 @@
 import cv2
+from multiprocessing import Pool, pool
 import pyautogui
-import re
 from pyscreeze import Point
 from selenium import webdriver
+import re
 import sys
 import time
 
@@ -11,25 +12,38 @@ adDelay = 2.0
 confidence = 0.9
 customerDelay = 2.5
 ingredientRegex = re.compile(r'Assets/Ingredients/(.*).png')
-maxLevel = 6
+maxLevel = 5
 orderRegex = re.compile(r'Assets/Pizzas/(.*)_pizza.png')
 potentialOrders = ['Assets/Pizzas/margherita_pizza.png', 'Assets/Pizzas/marinara_pizza.png', 
                     'Assets/Pizzas/ham_artichoke_pizza.png', 'Assets/Pizzas/ham_mushroom_pizza.png',
                     'Assets/Pizzas/pepperoni_pizza.png', 'Assets/Pizzas/pepperoni_mushroom_pizza.png']
+
+# Async method has to be outside of class
+def findOrderOnScreen(orderName):
+        order = pyautogui.locateCenterOnScreen(orderName, confidence=confidence)
+        purgedOrderName = orderRegex.findall(orderName)
+
+        if order != None: 
+            return purgedOrderName[0]
+        else: 
+            return None
 
 class PizzaPartyBot():
     browser = None
     currentLevel = 1
     ingredientLocations = {}
     isNextLevel = False
+    pool = None
 
 # Startup & Destruction
     def openBrowserAndStartGame(self):
         print('\nInitializing bot...\n')
         self.browser = webdriver.Firefox()
         self.browser.get('https://www.minigames.com/games/pizza-party')
-        # pyautogui.click(600, 200)
+        pyautogui.click(600, 200)
         pyautogui.scroll(-22)
+
+        time.sleep(aiDelay) # Wait for scroll to be complete before proceeding
 
         self.go()
         self.start()
@@ -67,28 +81,28 @@ class PizzaPartyBot():
         self.currentLevel += 1
         self.isNextLevel = True
 
-        if self.currentLevel != maxLevel:
+        if self.currentLevel <= maxLevel:
             self.clickButton('Assets/Buttons/next_level_button.png', needed=True)
         else:
             self.selfDestruct()
 
         print('\nStarting level %s...\n' % self.currentLevel)
-        time.sleep(customerDelay) # Wait for first customer of upcoming level
+        time.sleep(customerDelay / 2) # Wait for first customer of upcoming level (halved becuase no exit animation)
 
 # Order creation
     def getNewOrder(self) -> str:
         print('Getting new order...')
 
-        # TODO: Improve bottleneck
-        for orderName in potentialOrders:
-            order = pyautogui.locateCenterOnScreen(orderName, confidence=confidence)
+        if self.pool == None:
+            self.pool = Pool()
 
-            if order == None:
-                continue
+        results = self.pool.map(findOrderOnScreen, potentialOrders)
+
+        for result in results:
+            if result != None:
+                return result
             else:
-                purgedOrderName = orderRegex.findall(orderName)
-                if purgedOrderName[0] != None:
-                    return purgedOrderName[0]
+                continue
 
         print('\nNo new order...\n')
         return None
