@@ -65,24 +65,24 @@ class PizzaPartyBot():
 
 # Navigation
     def go(self):
-        self.clickButton('Assets/Buttons/go_button.png', needed=True)
+        self.clickButton('Assets/Buttons/go_button.png', required=True)
 
     def start(self):
-        self.clickButton('Assets/Buttons/start_button.png', needed=True)
+        self.clickButton('Assets/Buttons/start_button.png', required=True)
 
     def description(self):
-        self.clickButton('Assets/Buttons/description_button.png', needed=True)
+        self.clickButton('Assets/Buttons/description_button.png', required=True)
 
     def continueToFirstLevel(self):
         self.isNextLevel = True
-        self.clickButton('Assets/Buttons/continue_button.png', needed=True)
+        self.clickButton('Assets/Buttons/continue_button.png', required=True)
 
     def continueToNextLevel(self):
         self.currentLevel += 1
         self.isNextLevel = True
 
         if self.currentLevel <= maxLevel:
-            self.clickButton('Assets/Buttons/next_level_button.png', needed=True)
+            self.clickButton('Assets/Buttons/next_level_button.png', required=True)
         else:
             self.selfDestruct()
 
@@ -112,7 +112,8 @@ class PizzaPartyBot():
         ingredients = self.getIngredientsForOrder(order)
 
         for ingredient in ingredients:
-            pyautogui.click(ingredient.x / 2, ingredient.y / 2) # Macs use points and have to be divided by 2
+            # Macs use points and have to be divided by 2
+            pyautogui.click(ingredient.x / 2, ingredient.y / 2)
 
         print('Finished the %s pizza...\n' % order)
         time.sleep(customerDelay) # Wait for next customer
@@ -195,35 +196,22 @@ class PizzaPartyBot():
             return location
 
 # Utility methods
-    def clickButton(self, button, needed=False, checkInterval=1):
-        if needed:
-            self.waitForButtonToClick(button, checkInterval)
-        else:
-            self.clickButtonIfExists(button)
+    def clickButton(self, buttonName, required=False, checkInterval=1):
+        lookingForButton = True
 
-    def clickButtonIfExists(self, buttonName):
-        button = pyautogui.locateCenterOnScreen(buttonName, confidence=confidence)
-
-        if button == None:
-            return
-        else:
-            # Macs use points and have to be divided by 2
-            pyautogui.moveTo(button.x / 2, button.y / 2, duration=0.25)
-            pyautogui.click(button.x / 2, button.y / 2) 
-
-    def waitForButtonToClick(self, buttonName, checkInterval):
-        waiting = True
-
-        while waiting:
+        while lookingForButton:
             button = pyautogui.locateCenterOnScreen(buttonName, confidence=confidence)
 
-            if button == None:
+            if button == None and required:
                 time.sleep(checkInterval)
+            elif button == None and not required:
+                return
             else:
-                # Macs use points and have to be divided by 2
-                pyautogui.moveTo(button.x / 2, button.y / 2, duration=0.25)
-                pyautogui.click(button.x / 2, button.y / 2)
-                waiting = False
+                lookingForButton = False
+
+        # Macs use points and have to be divided by 2
+        pyautogui.moveTo(button.x / 2, button.y / 2, duration=0.25)
+        pyautogui.click(button.x / 2, button.y / 2)
 
 def main():
     app = PizzaPartyBot()
