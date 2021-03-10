@@ -154,7 +154,6 @@ class PizzaPartyBot():
             ingredients.append(self.ingredientLocations['mushrooms'])
 
         ingredients.append(self.ingredientLocations['oven'])
-
         return ingredients
 
     def getIngredientLocations(self):
