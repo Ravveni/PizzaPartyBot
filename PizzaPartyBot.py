@@ -1,9 +1,9 @@
 import cv2
-from multiprocessing import Pool, pool
+from multiprocessing import Pool
 import pyautogui
 from pyscreeze import Point
-from selenium import webdriver
 import re
+from selenium import webdriver
 import sys
 import time
 
@@ -77,7 +77,7 @@ class PizzaPartyBot():
         self.isNextLevel = True
         self.clickButton('Assets/Buttons/continue_button.png', required=True)
 
-    def continueToNextLevel(self):
+    def continueToNextLevelOrSelfDestruct(self):
         self.currentLevel += 1
         self.isNextLevel = True
 
@@ -130,34 +130,30 @@ class PizzaPartyBot():
             ingredients.append(self.ingredientLocations['tomato'])
             ingredients.append(self.ingredientLocations['mozzarella'])
             ingredients.append(self.ingredientLocations['basil'])
-            ingredients.append(self.ingredientLocations['oven'])
         elif order == 'marinara':
             ingredients.append(self.ingredientLocations['tomato'])
             ingredients.append(self.ingredientLocations['oregano'])
-            ingredients.append(self.ingredientLocations['oven'])
         elif order == 'ham_artichoke':
             ingredients.append(self.ingredientLocations['tomato'])
             ingredients.append(self.ingredientLocations['mozzarella'])
             ingredients.append(self.ingredientLocations['ham'])
             ingredients.append(self.ingredientLocations['artichoke'])
-            ingredients.append(self.ingredientLocations['oven'])
         elif order == 'ham_mushroom':
             ingredients.append(self.ingredientLocations['mozzarella'])
             ingredients.append(self.ingredientLocations['ham'])
             ingredients.append(self.ingredientLocations['mushrooms'])
-            ingredients.append(self.ingredientLocations['oven'])
         elif order == 'pepperoni':
             ingredients.append(self.ingredientLocations['tomato'])
             ingredients.append(self.ingredientLocations['mozzarella'])
             ingredients.append(self.ingredientLocations['basil'])
             ingredients.append(self.ingredientLocations['pepperoni'])
-            ingredients.append(self.ingredientLocations['oven'])
         elif order == 'pepperoni_mushroom':
             ingredients.append(self.ingredientLocations['tomato'])
             ingredients.append(self.ingredientLocations['mozzarella'])
             ingredients.append(self.ingredientLocations['pepperoni'])
             ingredients.append(self.ingredientLocations['mushrooms'])
-            ingredients.append(self.ingredientLocations['oven'])
+
+        ingredients.append(self.ingredientLocations['oven'])
 
         return ingredients
 
@@ -222,10 +218,10 @@ def main():
     while True:
         order = app.getNewOrder()
 
-        if order == None:
-            app.continueToNextLevel()
-        else:
+        if order != None:
             app.prepareNewOrder(order)
+        else:
+            app.continueToNextLevelOrSelfDestruct()
 
 if __name__ == '__main__':
     main()
