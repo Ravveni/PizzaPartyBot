@@ -18,4 +18,3 @@ Powered primarily through `pyautogui` for image recognition and GUI control.
 - Mac Retina display (Points v. pixel calculation difference, can probably remove the `/ 2` after move calculations for other screens, but that is untested at the moment)
 - A powerful enough machine to have multithreaded image recognition
 - [Follow setup docs](https://github.com/Ravveni/PizzaPartyBot/blob/main/Setup.md)
-- 
