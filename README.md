@@ -18,11 +18,4 @@ Powered primarily through `pyautogui` for image recognition and GUI control.
 - Mac Retina display (Points v. pixel calculation difference, can probably remove the `/ 2` after move calculations for other screens, but that is untested at the moment)
 - A powerful enough machine to have multithreaded image recognition
 - [Follow setup docs](https://github.com/Ravveni/PizzaPartyBot/blob/main/Setup.md)
-
-### TODO
-- [x] Add additional level compatibility
-- [x] Cache ingredientLocations dictionary to add to instead of reinitializing
-- [x] Requirements.txt for pip installation of dependencies
-- [x] Alleviate bottleneck for pizza image recognition
-- [ ] Historical database for amount of each pizza per level
-- [ ] Finish setup documentation for Mac
+- 
